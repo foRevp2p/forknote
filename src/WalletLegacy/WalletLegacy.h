@@ -1,4 +1,5 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, Karbo developers
 //
 // This file is part of Bytecoin.
 //
@@ -83,9 +84,11 @@ public:
   virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
   virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
+  
 
   void syncAll(bool syncWalletFromZero) override;
   virtual void getAccountKeys(AccountKeys& keys) override;
+  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) override;
 
 private:
 

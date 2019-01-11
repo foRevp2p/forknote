@@ -1,4 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2018, Karbo developers
 //
 // This file is part of Bytecoin.
 //
@@ -514,6 +516,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "Show all known transfers");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
+  m_consoleHandler.setHandler("get_tx_key", boost::bind(&simple_wallet::get_tx_key, this, _1), "Get secret transaction key for a given <txid>");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee]"
@@ -547,6 +550,35 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
   logManager.setMaxLevel(static_cast<Logging::Level>(l));
   return true;
 }
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+bool simple_wallet::get_tx_key(const std::vector<std::string> &args) {
+	if (args.size() != 1)
+	{
+		fail_msg_writer() << "use: get_tx_key <txid>";
+		return true;
+	}
+	const std::string &str_hash = args[0];
+	Crypto::Hash txid;
+	if (!parse_hash256(str_hash, txid)) {
+		fail_msg_writer() << "Failed to parse txid";
+		return true;
+	}
+
+	Crypto::SecretKey tx_key = m_wallet->getTxKey(txid);
+	if (tx_key != NULL_SECRET_KEY) {
+		success_msg_writer() << "Tx key: " << Common::podToHex(tx_key);
+		return true;
+	}
+	else {
+		fail_msg_writer() << "No tx key found for this txid";
+		return true;
+	}
+}
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   handle_command_line(vm);
@@ -1303,8 +1335,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
-    success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
-
+     success_msg_writer(true) << "Money successfully sent, transaction id: " << Common::podToHex(txInfo.hash) << ", key: " << Common::podToHex(txInfo.secretKey);
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
     } catch (const std::exception& e) {
@@ -1666,5 +1697,4 @@ CryptoNote::Currency currency = currencyBuilder.currency();
   return 1;
   //CATCH_ENTRY_L0("main", 1);
 }
-
 

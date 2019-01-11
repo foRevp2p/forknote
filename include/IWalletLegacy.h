@@ -1,4 +1,5 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2018, Karbo developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,7 +23,10 @@
 #include <ostream>
 #include <string>
 #include <system_error>
+#include <boost/optional.hpp>
 #include "CryptoNote.h"
+#include "crypto/crypto.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
 
 namespace CryptoNote {
 
@@ -55,6 +59,7 @@ struct WalletLegacyTransaction {
   uint64_t         sentTime;
   uint64_t         unlockTime;
   Crypto::Hash     hash;
+  boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
   bool             isCoinbase;
   uint32_t         blockHeight;
   uint64_t         timestamp;
@@ -84,6 +89,7 @@ public:
   virtual void removeObserver(IWalletLegacyObserver* observer) = 0;
 
   virtual void initAndGenerate(const std::string& password) = 0;
+  virtual Crypto::SecretKey generateKey(const std::string& password, const Crypto::SecretKey& recovery_param = Crypto::SecretKey(), bool recover = false, bool two_random = false) = 0;
   virtual void initAndLoad(std::istream& source, const std::string& password) = 0;
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) = 0;
   virtual void shutdown() = 0;
@@ -102,12 +108,14 @@ public:
   virtual size_t getTransferCount() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-  
+
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
 
   virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
   virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
+  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) = 0;
+
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
 
   virtual void getAccountKeys(AccountKeys& keys) = 0;

@@ -27,7 +27,7 @@
 
 namespace PaymentService {
 
-PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup) 
+PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup)
   : JsonRpcServer(sys, stopEvent, loggerGroup)
   , service(service)
   , logger(loggerGroup, "PaymentServiceJsonRpcServer")
@@ -171,7 +171,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetTransaction(const GetTrans
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleSendTransaction(const SendTransaction::Request& request, SendTransaction::Response& response) {
-  return service.sendTransaction(request, response.transactionHash);
+  return service.sendTransaction(request, response.transactionHash, response.transactionSecretKey);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateDelayedTransaction(const CreateDelayedTransaction::Request& request, CreateDelayedTransaction::Response& response) {
